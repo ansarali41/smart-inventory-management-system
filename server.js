@@ -1,12 +1,13 @@
-import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import morgan from 'morgan';
 import dotenv from 'dotenv';
+import express from 'express';
 import mongoose from 'mongoose';
+import morgan from 'morgan';
+import billsRouter from './routes/billsRoutes.js';
+import customerRouter from './routes/customersRoutes.js';
 import productRouter from './routes/productsRoutes.js';
 import userRouter from './routes/userRoutes.js';
-import billsRouter from './routes/billsRoutes.js';
 //require('colors');
 
 dotenv.config();
@@ -35,6 +36,7 @@ app.use(morgan('dev'));
 app.use('/api/products/', productRouter);
 app.use('/api/users/', userRouter);
 app.use('/api/bills/', billsRouter);
+app.use('/api/customers/', customerRouter);
 
 //Create Port
 const PORT = process.env.PORT || 5000;

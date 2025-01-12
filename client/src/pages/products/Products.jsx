@@ -1,12 +1,23 @@
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Form, Input, Modal, Select, Table, message } from 'antd';
+import FormItem from 'antd/lib/form/FormItem';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import LayoutApp from '../../components/Layout';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Modal, Select, Table, message } from 'antd';
-import FormItem from 'antd/lib/form/FormItem';
 
 const Products = () => {
+    const [userId, setUserId] = useState(() => {
+        const auth = localStorage.getItem('auth');
+        return auth ? JSON.parse(auth)._id : null;
+    });
+    useEffect(() => {
+        const auth = localStorage.getItem('auth');
+        if (auth) {
+            setUserId(JSON.parse(auth)._id);
+        }
+    }, []);
+
     const dispatch = useDispatch();
     const [productData, setProductData] = useState([]);
     const [popModal, setPopModal] = useState(false);
@@ -17,12 +28,11 @@ const Products = () => {
             dispatch({
                 type: 'SHOW_LOADING',
             });
-            const { data } = await axios.get('/api/products/getproducts');
+            const { data } = await axios.get(`/api/products/getproducts?createdBy=${userId}`);
             setProductData(data);
             dispatch({
                 type: 'HIDE_LOADING',
             });
-            console.log(data);
         } catch (error) {
             dispatch({
                 type: 'HIDE_LOADING',
@@ -69,9 +79,17 @@ const Products = () => {
         {
             title: 'Price',
             dataIndex: 'price',
+            render: (price, record) => <span>{price}৳</span>,
         },
         {
-            title: 'Action',
+            title: 'Stock',
+            dataIndex: 'stock',
+            render: (stock, record) => (
+                <div>{record.stock < 10 ? <span style={{ color: 'red' }}>{record.stock}</span> : <span style={{ color: 'green' }}>{record.stock}</span>}</div>
+            ),
+        },
+        {
+            title: 'Actions',
             dataIndex: '_id',
             render: (id, record) => (
                 <div>
@@ -89,13 +107,12 @@ const Products = () => {
     ];
 
     const handlerSubmit = async value => {
-        //console.log(value);
-        if (editProduct === null) {
+        if (!editProduct) {
             try {
                 dispatch({
                     type: 'SHOW_LOADING',
                 });
-                const res = await axios.post('/api/products/addproducts', value);
+                await axios.post('/api/products/addproducts', { ...value, createdBy: userId });
                 message.success('Product Added Successfully!');
                 getAllProducts();
                 setPopModal(false);
@@ -135,7 +152,7 @@ const Products = () => {
         <LayoutApp>
             <h2>All Products </h2>
             <Button className="add-new" onClick={() => setPopModal(true)}>
-                Add New
+                Add New Product
             </Button>
             <Table dataSource={productData} columns={columns} bordered />
 
@@ -163,12 +180,15 @@ const Products = () => {
                         <FormItem name="price" label="Price">
                             <Input />
                         </FormItem>
+                        <FormItem name="stock" label="Stock">
+                            <Input />
+                        </FormItem>
                         <FormItem name="image" label="Image URL">
                             <Input />
                         </FormItem>
                         <div className="form-btn-add">
                             <Button htmlType="submit" className="add-new">
-                                Add
+                                {editProduct ? 'Save' : 'Add'}
                             </Button>
                         </div>
                     </Form>
