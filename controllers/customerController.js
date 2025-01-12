@@ -9,31 +9,47 @@ export const getCustomerController = async (req, res) => {
         console.log(error);
     }
 };
+
 // find by number
 export const getCustomersByNumberController = async (req, res) => {
     try {
-        // find by number as matching using regex
+        const { phone, createdBy } = req.query;
+        if (!phone || !createdBy) {
+            return res.status(400).json({ message: 'Phone and createdBy are required' });
+        }
+
         const customers = await Customer.find({
-            phone: { $regex: req.query.phone },
-            createdBy: req.query.createdBy,
+            phone: phone,
+            createdBy: createdBy,
         })
             .limit(5)
             .sort({ createdAt: -1 });
 
-        res.status(200).send(customers);
+        res.status(200).json(customers);
     } catch (error) {
-        console.log(error);
+        console.error('Error in getCustomersByNumberController:', error);
+        res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 };
 
 //for add
 export const addCustomerController = async (req, res) => {
     try {
+        const { name, phone, address, createdBy } = req.body;
+
+        if (!name || !phone || !address || !createdBy) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
         const newCustomer = new Customer(req.body);
-        await newCustomer.save();
-        res.status(200).send('Customer Created Successfully!');
+        const savedCustomer = await newCustomer.save();
+        res.status(200).json({
+            message: 'Customer Created Successfully!',
+            customer: savedCustomer,
+        });
     } catch (error) {
-        console.log(error);
+        console.error('Error in addCustomerController:', error);
+        res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 };
 

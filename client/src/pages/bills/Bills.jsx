@@ -1,5 +1,5 @@
 import { EyeOutlined } from '@ant-design/icons';
-import { Button, Modal, Table } from 'antd';
+import { Button, Modal, Table, message } from 'antd';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -7,6 +7,16 @@ import { useReactToPrint } from 'react-to-print';
 import Layout from '../../components/Layout';
 
 const Bills = () => {
+    const [userId, setUserId] = useState(() => {
+        const auth = localStorage.getItem('auth');
+        return auth ? JSON.parse(auth)._id : null;
+    });
+    useEffect(() => {
+        const auth = localStorage.getItem('auth');
+        if (auth) {
+            setUserId(JSON.parse(auth)._id);
+        }
+    }, []);
     const componentRef = useRef();
     const dispatch = useDispatch();
     const [billsData, setBillsData] = useState([]);
@@ -15,26 +25,31 @@ const Bills = () => {
 
     const getAllBills = async () => {
         try {
+            if (!userId) {
+                return;
+            }
             dispatch({
                 type: 'SHOW_LOADING',
             });
-            const { data } = await axios.get('/api/bills/getbills');
+            const { data } = await axios.get('/api/bills/getbills', {
+                params: { createdBy: userId }
+            });
             setBillsData(data);
             dispatch({
                 type: 'HIDE_LOADING',
             });
-            console.log(data);
         } catch (error) {
             dispatch({
                 type: 'HIDE_LOADING',
             });
+            message.error('Error fetching bills');
             console.log(error);
         }
     };
 
     useEffect(() => {
         getAllBills();
-    }, []);
+    }, [userId]);
 
     const columns = [
         {

@@ -7,6 +7,17 @@ import { useDispatch } from 'react-redux';
 import LayoutApp from '../../components/Layout';
 
 const Products = () => {
+    const [userId, setUserId] = useState(() => {
+        const auth = localStorage.getItem('auth');
+        return auth ? JSON.parse(auth)._id : null;
+    });
+    useEffect(() => {
+        const auth = localStorage.getItem('auth');
+        if (auth) {
+            setUserId(JSON.parse(auth)._id);
+        }
+    }, []);
+
     const dispatch = useDispatch();
     const [productData, setProductData] = useState([]);
     const [popModal, setPopModal] = useState(false);
@@ -17,12 +28,11 @@ const Products = () => {
             dispatch({
                 type: 'SHOW_LOADING',
             });
-            const { data } = await axios.get('/api/products/getproducts');
+            const { data } = await axios.get(`/api/products/getproducts?createdBy=${userId}`);
             setProductData(data);
             dispatch({
                 type: 'HIDE_LOADING',
             });
-            console.log(data);
         } catch (error) {
             dispatch({
                 type: 'HIDE_LOADING',
@@ -102,7 +112,7 @@ const Products = () => {
                 dispatch({
                     type: 'SHOW_LOADING',
                 });
-                await axios.post('/api/products/addproducts', value);
+                await axios.post('/api/products/addproducts', { ...value, createdBy: userId });
                 message.success('Product Added Successfully!');
                 getAllProducts();
                 setPopModal(false);

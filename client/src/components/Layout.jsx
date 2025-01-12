@@ -65,7 +65,7 @@ const LayoutApp = ({ children }) => {
                     </Menu.Item>
                 </Menu>
                 <div className="powered-by-container">
-                    <p className="powered-by">Powered by NUB CSE</p>
+                    <p className="powered-by">Powered by Binary Brigade</p>
                 </div>
             </Sider>
             <Layout className="site-layout">

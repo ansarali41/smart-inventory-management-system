@@ -9,6 +9,17 @@ import './home.css';
 import allCategories from '../../asset/images/all-cat.png';
 
 const Home = () => {
+    const [userId, setUserId] = useState(() => {
+        const auth = localStorage.getItem('auth');
+        return auth ? JSON.parse(auth)._id : null;
+    });
+
+    useEffect(() => {
+        const auth = localStorage.getItem('auth');
+        if (auth) {
+            setUserId(JSON.parse(auth)._id);
+        }
+    }, []);
     const dispatch = useDispatch();
 
     const [productData, setProductData] = useState([]);
@@ -38,7 +49,7 @@ const Home = () => {
                 dispatch({
                     type: 'SHOW_LOADING',
                 });
-                const { data } = await axios.get('/api/products/getproducts');
+                const { data } = await axios.get(`/api/products/getproducts?createdBy=${userId}`);
                 setProductData(data);
                 dispatch({
                     type: 'HIDE_LOADING',
@@ -50,7 +61,7 @@ const Home = () => {
         };
 
         getAllProducts();
-    }, [dispatch]);
+    }, [dispatch, userId]); // Added userId as a dependency
 
     return (
         <LayoutApp>
@@ -77,19 +88,27 @@ const Home = () => {
                         ))}
                     </div>
                     <Row>
-                        {selectedCategory === 'all'
-                            ? productData?.map(product => (
-                                  <Col xs={24} sm={6} md={6} lg={6}>
-                                      <Product key={product.id} product={product} />
-                                  </Col>
-                              ))
-                            : productData
-                                  ?.filter(i => i.category === selectedCategory)
-                                  .map(product => (
-                                      <Col xs={24} sm={6} md={6} lg={6}>
-                                          <Product key={product.id} product={product} />
-                                      </Col>
-                                  ))}
+                        {selectedCategory === 'all' ? (
+                            productData?.map(product => (
+                                <Col xs={24} sm={6} md={6} lg={6} key={product._id}>
+                                    <Product key={product._id} product={product} />
+                                </Col>
+                            ))
+                        ) : productData?.filter(i => i.category === selectedCategory).length > 0 ? (
+                            productData
+                                ?.filter(i => i.category === selectedCategory)
+                                .map(product => (
+                                    <Col xs={24} sm={6} md={6} lg={6} key={product._id}>
+                                        <Product key={product._id} product={product} />
+                                    </Col>
+                                ))
+                        ) : (
+                            <Col xs={24} sm={24} md={24} lg={24}>
+                                <div className="empty-container">
+                                    <Empty description={<span>No Product Found</span>} />
+                                </div>
+                            </Col>
+                        )}
                     </Row>
                 </div>
             )}

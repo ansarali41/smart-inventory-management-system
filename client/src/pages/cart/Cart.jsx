@@ -9,8 +9,21 @@ import Layout from '../../components/Layout';
 import './cart.css';
 
 const Cart = () => {
+    const [userId, setUserId] = useState(() => {
+        const auth = localStorage.getItem('auth');
+        return auth ? JSON.parse(auth)._id : null;
+    });
+
+    useEffect(() => {
+        const auth = localStorage.getItem('auth');
+        if (auth) {
+            setUserId(JSON.parse(auth)._id);
+        }
+    }, []);
+
     const [subTotal, setSubTotal] = useState(0);
     const [billPopUp, setBillPopUp] = useState(false);
+    const [form] = Form.useForm();
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -85,16 +98,54 @@ const Cart = () => {
     }, [cartItems]);
 
     const handlerSubmit = async value => {
-        //console.log(value);
         try {
+            if (!userId) {
+                message.error('User authentication error. Please login again.');
+                return;
+            }
+
+            // First check if customer exists
+            const customerResponse = await axios.get(`/api/customers/get-customers-by-number?phone=${value.phone}&createdBy=${userId}`);
+            let customerId;
+
+            if (customerResponse.data.length === 0) {
+                // Create new customer
+                const newCustomer = {
+                    name: value.name,
+                    phone: value.phone,
+                    address: value.address,
+                    createdBy: userId,
+                };
+                try {
+                    const createResponse = await axios.post('/api/customers/add-customers', newCustomer);
+                    if (createResponse.data.customer) {
+                        customerId = createResponse.data.customer._id;
+                        message.success('New customer created successfully!');
+                    } else {
+                        throw new Error('Failed to create customer');
+                    }
+                } catch (error) {
+                    console.error('Error creating customer:', error);
+                    message.error('Failed to create customer');
+                    return;
+                }
+            } else {
+                customerId = customerResponse.data[0]._id;
+            }
+
             const newObject = {
-                ...value,
+                customerName: value.name,
+                customerPhone: Number(value.phone),
+                customerAddress: value.address,
                 cartItems,
                 subTotal,
                 tax: Number(((subTotal / 100) * 5).toFixed(2)),
                 totalAmount: Number((Number(subTotal) + Number(((subTotal / 100) * 5).toFixed(2))).toFixed(2)),
-                userId: JSON.parse(localStorage.getItem('auth'))._id,
+                paymentMethod: value.paymentMethod,
+                createdBy: userId,
+                customerId: customerId,
             };
+
             // check the stock
             for (let i = 0; i < cartItems.length; i++) {
                 if (cartItems[i].stock < cartItems[i].quantity) {
@@ -102,23 +153,36 @@ const Cart = () => {
                     return;
                 }
             }
-            await axios.post('/api/bills/addbills', newObject);
-            message.success('Bill Generated!');
-            // update product stock
-            for (let i = 0; i < cartItems.length; i++) {
-                await axios.put('/api/products/updateproducts', { stock: cartItems[i].stock - cartItems[i].quantity, productId: cartItems[i]._id });
-            }
 
-            //clear cart
-            dispatch({
-                type: 'CLEAR_CART',
-            });
-            navigate('/bills');
+            try {
+                const billResponse = await axios.post('/api/bills/addbills', newObject);
+                if (billResponse.data) {
+                    message.success('Bill Generated Successfully!');
+                    // update product stock
+                    for (let i = 0; i < cartItems.length; i++) {
+                        await axios.put('/api/products/updateproducts', {
+                            stock: cartItems[i].stock - cartItems[i].quantity,
+                            productId: cartItems[i]._id,
+                        });
+                    }
+
+                    //clear cart
+                    dispatch({
+                        type: 'CLEAR_CART',
+                    });
+                    navigate('/bills');
+                    setBillPopUp(false);
+                }
+            } catch (error) {
+                console.error('Error generating bill:', error);
+                message.error(error.response?.data?.message || 'Failed to generate bill');
+            }
         } catch (error) {
             message.error('Error!');
             console.log(error);
         }
     };
+
     return (
         <Layout>
             <h2>Cart</h2>
@@ -139,19 +203,42 @@ const Cart = () => {
                         </Button>
                     </div>
                     <Modal title="Create Invoice" visible={billPopUp} onCancel={() => setBillPopUp(false)} footer={false}>
-                        <Form layout="vertical" onFinish={handlerSubmit}>
+                        <Form layout="vertical" onFinish={handlerSubmit} form={form}>
                             {/* find customer by number or create new customer */}
-
-                            <FormItem name="phone" label="Customer Phone">
+                            <FormItem name="phone" label="Customer Phone" rules={[{ required: true, message: 'Please enter phone number' }]}>
+                                <Input
+                                    onBlur={async e => {
+                                        const phone = e.target.value;
+                                        if (phone && userId) {
+                                            try {
+                                                const response = await axios.get(`/api/customers/get-customers-by-number?phone=${phone}&createdBy=${userId}`);
+                                                if (response.data.length > 0) {
+                                                    const customer = response.data[0];
+                                                    form.setFieldsValue({
+                                                        name: customer.name,
+                                                        address: customer.address,
+                                                    });
+                                                    message.success('Customer found!');
+                                                } else {
+                                                    form.setFieldsValue({
+                                                        name: '',
+                                                        address: '',
+                                                    });
+                                                }
+                                            } catch (error) {
+                                                console.error('Error finding customer:', error);
+                                            }
+                                        }
+                                    }}
+                                />
+                            </FormItem>
+                            <FormItem name="name" label="Customer Name" rules={[{ required: true, message: 'Please enter customer name' }]}>
                                 <Input />
                             </FormItem>
-                            <FormItem name="name" label="Customer Name">
+                            <FormItem name="address" label="Customer Address" rules={[{ required: true, message: 'Please enter customer address' }]}>
                                 <Input />
                             </FormItem>
-                            <FormItem name="address" label="Customer Address">
-                                <Input />
-                            </FormItem>
-                            <Form.Item name="paymentMethod" label="Payment Method">
+                            <Form.Item name="paymentMethod" label="Payment Method" rules={[{ required: true, message: 'Please select payment method' }]}>
                                 <Select>
                                     <Select.Option value="cash">Cash</Select.Option>
                                     <Select.Option value="mobilePay">Mobile Pay</Select.Option>

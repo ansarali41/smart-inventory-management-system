@@ -4,6 +4,7 @@ import axios from 'axios';
 import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../../asset/images/brand-logo.png';
 
 const Register = () => {
     const dispatch = useDispatch();
@@ -15,7 +16,8 @@ const Register = () => {
                 type: 'SHOW_LOADING',
             });
             await axios.post('/api/users/register', value);
-            message.success('Register Successfully!');
+
+            message.success('Register Successfully!, Please Login');
             navigate('/login');
             dispatch({
                 type: 'HIDE_LOADING',
@@ -38,14 +40,15 @@ const Register = () => {
 
     return (
         <div className="form">
-            <h2>POS SYSTEM</h2>
+            <img src={logo} alt="logo" className="brand-logo-lg" />
+            <h2>Welcome to Smart Inventory Management System</h2>
             <p>Register Account</p>
             <div className="form-group">
                 <Form layout="vertical" onFinish={handlerSubmit}>
                     <FormItem name="name" label="Name">
                         <Input placeholder="Enter Username" />
                     </FormItem>
-                    <FormItem name="userId" label="Email Address">
+                    <FormItem name="email" label="Email Address">
                         <Input placeholder="Enter Email Address" />
                     </FormItem>
                     <FormItem name="password" label="Password">
@@ -61,6 +64,7 @@ const Register = () => {
                     </div>
                 </Form>
             </div>
+            <small>Powered by Binary Brigade</small>
         </div>
     );
 };

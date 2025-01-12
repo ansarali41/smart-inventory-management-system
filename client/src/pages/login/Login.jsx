@@ -4,13 +4,14 @@ import axios from 'axios';
 import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../../asset/images/brand-logo.png';
 
 const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const handlerSubmit = async value => {
-        //console.log(value);
+        console.log('value login', value);
         try {
             dispatch({
                 type: 'SHOW_LOADING',
@@ -19,15 +20,17 @@ const Login = () => {
             dispatch({
                 type: 'HIDE_LOADING',
             });
+
             message.success('User Login Successfully!');
-            localStorage.setItem('auth', JSON.stringify(res.data));
+            //delete res.data.password
+            delete res?.data?.user?.password;
+            localStorage.setItem('auth', JSON.stringify(res?.data?.user));
             navigate('/');
         } catch (error) {
             dispatch({
                 type: 'HIDE_LOADING',
             });
-            message.error('Error!');
-            console.log(error);
+            message.error(error.response.data.message);
         }
     };
 
@@ -40,11 +43,12 @@ const Login = () => {
 
     return (
         <div className="form">
-            <h2>POS SYSTEM</h2>
+            <img src={logo} alt="logo" className="brand-logo-lg" />
+            <h2>Welcome to Smart Inventory Management System</h2>
             <p>Login</p>
             <div className="form-group">
                 <Form layout="vertical" onFinish={handlerSubmit}>
-                    <FormItem name="userId" label="Email Address">
+                    <FormItem name="email" label="Email Address">
                         <Input placeholder="Enter Email Address" />
                     </FormItem>
                     <FormItem name="password" label="Password">
@@ -60,6 +64,8 @@ const Login = () => {
                     </div>
                 </Form>
             </div>
+
+            <small>Powered by Binary Brigade</small>
         </div>
     );
 };

@@ -4,7 +4,7 @@ import products from '../utils/data.js';
 //for add or fetch
 export const getProductController = async (req, res) => {
     try {
-        const products = await Product.find();
+        const products = await Product.find({ createdBy: req.query.createdBy });
         res.status(200).send(products);
     } catch (error) {
         console.log(error);
