@@ -159,7 +159,7 @@ const Customers = () => {
         {
             title: 'Contact Number',
             dataIndex: 'phone',
-            render: phone => <span>+880{phone}</span>,
+            render: phone => <span>+880 {phone}</span>,
         },
         {
             title: 'Customer Address',
@@ -191,6 +191,7 @@ const Customers = () => {
                         value={searchPhone}
                         onChange={handlePhoneInput}
                         style={{ width: '200px' }}
+                        prefix="+880"
                         suffix={<SearchOutlined />}
                         maxLength={15}
                     />
@@ -240,6 +241,7 @@ const Customers = () => {
                         ]}
                     >
                         <Input
+                            prefix="+880"
                             maxLength={15}
                             onChange={e => {
                                 const value = e.target.value.replace(/\D/g, '');
