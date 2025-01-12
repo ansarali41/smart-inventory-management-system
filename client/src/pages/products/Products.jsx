@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Modal, Select, Table, message } from 'antd';
 import FormItem from 'antd/lib/form/FormItem';
 import axios from 'axios';
@@ -22,13 +22,19 @@ const Products = () => {
     const [productData, setProductData] = useState([]);
     const [popModal, setPopModal] = useState(false);
     const [editProduct, setEditProduct] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const getAllProducts = async () => {
+    const getAllProducts = async (search = '') => {
         try {
             dispatch({
                 type: 'SHOW_LOADING',
             });
-            const { data } = await axios.get(`/api/products/getproducts?createdBy=${userId}`);
+            const { data } = await axios.get('/api/products/getproducts', {
+                params: {
+                    createdBy: userId,
+                    search,
+                },
+            });
             setProductData(data);
             dispatch({
                 type: 'HIDE_LOADING',
@@ -44,6 +50,15 @@ const Products = () => {
     useEffect(() => {
         getAllProducts();
     }, []);
+
+    // Handle search with debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            getAllProducts(searchQuery);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
     const handlerDelete = async record => {
         try {
@@ -84,15 +99,7 @@ const Products = () => {
         {
             title: 'Stock',
             dataIndex: 'stock',
-            render: stock => (
-                <div>
-                    {stock < 10 ? (
-                        <span style={{ color: 'red' }}>{stock}</span>
-                    ) : (
-                        <span style={{ color: 'green' }}>{stock}</span>
-                    )}
-                </div>
-            ),
+            render: stock => <div>{stock < 10 ? <span style={{ color: 'red' }}>{stock}</span> : <span style={{ color: 'green' }}>{stock}</span>}</div>,
         },
         {
             title: 'Actions',
@@ -119,10 +126,7 @@ const Products = () => {
                             setPopModal(true);
                         }}
                     />
-                    <DeleteOutlined
-                        className="cart-action"
-                        onClick={() => handlerDelete(record)}
-                    />
+                    <DeleteOutlined className="cart-action" onClick={() => handlerDelete(record)} />
                 </div>
             ),
         },
@@ -172,11 +176,37 @@ const Products = () => {
 
     return (
         <LayoutApp>
-            <h2>All Products </h2>
-            <Button className="add-new" onClick={() => setPopModal(true)}>
-                Add New Product
-            </Button>
-            <Table dataSource={productData} columns={columns} bordered />
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <h2>All Products</h2>
+                <div className="d-flex gap-3">
+                    <Input
+                        placeholder="Search by product name"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        style={{ width: '200px' }}
+                        suffix={<SearchOutlined />}
+                    />
+                    <Button
+                        className="add-new"
+                        onClick={() => {
+                            setEditProduct(null);
+                            setPopModal(true);
+                        }}
+                    >
+                        Add Product
+                    </Button>
+                </div>
+            </div>
+
+            <Table
+                dataSource={productData}
+                columns={columns}
+                bordered
+                pagination={false}
+                locale={{
+                    emptyText: searchQuery ? 'No matching products found' : 'No products available',
+                }}
+            />
 
             {popModal && (
                 <Modal

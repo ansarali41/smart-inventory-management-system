@@ -1,10 +1,19 @@
 import Product from '../models/productModel.js';
 import products from '../utils/data.js';
 
-//for add or fetch
+// get products
 export const getProductController = async (req, res) => {
     try {
-        const products = await Product.find({ createdBy: req.query.createdBy });
+        const { createdBy, search } = req.query;
+        
+        const query = { createdBy };
+        
+        // Add name search if search parameter exists
+        if (search) {
+            query.name = { $regex: search, $options: 'i' };
+        }
+
+        const products = await Product.find(query).sort({ createdAt: -1 });
         res.status(200).send(products);
     } catch (error) {
         console.log(error);
