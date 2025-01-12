@@ -1,64 +1,61 @@
 import { Table } from 'antd';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import Layout from '../../components/Layout'
+import Layout from '../../components/Layout';
 
 const Customers = () => {
+    const dispatch = useDispatch();
+    const [customersData, setCustomersData] = useState([]);
 
-  const dispatch = useDispatch();
-  const [billsData, setBillsData] = useState([]);
+    const getAllCustomers = async () => {
+        try {
+            dispatch({
+                type: 'SHOW_LOADING',
+            });
+            const { data } = await axios.get('/api/customers/get-customers');
+            setCustomersData(data);
+            dispatch({
+                type: 'HIDE_LOADING',
+            });
+            console.log(data);
+        } catch (error) {
+            dispatch({
+                type: 'HIDE_LOADING',
+            });
+            console.log(error);
+        }
+    };
 
-  const getAllBills = async () => {
-    try {
-      dispatch({
-        type: "SHOW_LOADING",
-      });
-      const {data} = await axios.get('/api/bills/getbills');
-      setBillsData(data);
-      dispatch({
-        type: "HIDE_LOADING",
-      });
-      console.log(data);
+    useEffect(() => {
+        getAllCustomers();
+    }, []);
 
-    } catch(error) {
-      dispatch({
-        type: "HIDE_LOADING",
-      });
-      console.log(error);
-    }
-  };
+    const columns = [
+        {
+            title: 'ID',
+            dataIndex: '_id',
+        },
+        {
+            title: 'Customer Name',
+            dataIndex: 'name',
+        },
+        {
+            title: 'Contact Number',
+            dataIndex: 'phone',
+        },
+        {
+            title: 'Customer Address',
+            dataIndex: 'address',
+        },
+    ];
 
-  useEffect(() => {
-      getAllBills();
-  }, []);
+    return (
+        <Layout>
+            <h2>All Customers </h2>
+            <Table dataSource={customersData} columns={columns} bordered />
+        </Layout>
+    );
+};
 
-  const columns = [
-    {
-        title: "ID",
-        dataIndex: "_id"
-    },
-    {
-        title: "Customer Name",
-        dataIndex: "customerName",
-    }, 
-    {
-        title: "Contact Number",
-        dataIndex: "customerPhone",
-    }
-    , 
-    {
-        title: "Customer Address",
-        dataIndex: "customerAddress",
-    }
-  ]
-
-  return (
-    <Layout>
-      <h2>All Customers </h2>
-      <Table dataSource={billsData} columns={columns} bordered />
-    </Layout>
-  )
-}
-
-export default Customers
+export default Customers;

@@ -2,7 +2,9 @@
     background: #001e28;
 }
 
-.ant-menu-dark .ant-menu-sub, .ant-menu.ant-menu-dark, .ant-menu.ant-menu-dark .ant-menu-sub {
+.ant-menu-dark .ant-menu-sub,
+.ant-menu.ant-menu-dark,
+.ant-menu.ant-menu-dark .ant-menu-sub {
     background: #001e28;
 }
 
@@ -17,17 +19,17 @@
     cursor: pointer;
     transition: color 0.3s;
 }
-  
+
 #components-layout-demo-custom-trigger .trigger:hover {
     color: #1890ff;
 }
-  
+
 #components-layout-demo-custom-trigger .logo {
     height: 32px;
     margin: 16px;
     background: rgba(255, 255, 255, 0.3);
 }
-  
+
 .site-layout .site-layout-background {
     background: #fff;
 }
@@ -56,4 +58,34 @@
 .logo-title {
     letter-spacing: 1.3px;
     color: #ffffff;
+}
+.brand-logo {
+    width: 40px;
+}
+
+.powered-by {
+    text-align: center;
+    margin-top: 10px;
+    color: #ff7f50;
+}
+.powered-by-container {
+    height: 50px;
+}
+
+.product-name {
+    font-weight: 500;
+    color: #001e28;
+    letter-spacing: 1.3px;
+}
+
+.product-price {
+    font-weight: 500;
+    color: #001e28;
+    letter-spacing: 1.3px;
+}
+
+.product-stock {
+    font-weight: 500;
+    color: #001e28;
+    letter-spacing: 1.3px;
 }

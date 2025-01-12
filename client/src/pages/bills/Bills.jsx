@@ -1,10 +1,9 @@
+import { EyeOutlined } from '@ant-design/icons';
 import { Button, Modal, Table } from 'antd';
 import axios from 'axios';
-import React, { useEffect, useState, useRef } from 'react';
-import ReactToPrint from 'react-to-print';
-import { useReactToPrint } from 'react-to-print';
-import { EyeOutlined } from '@ant-design/icons';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useReactToPrint } from 'react-to-print';
 import Layout from '../../components/Layout';
 
 const Bills = () => {
