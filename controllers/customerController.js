@@ -14,21 +14,26 @@ export const getCustomerController = async (req, res) => {
 export const getCustomersByNumberController = async (req, res) => {
     try {
         const { phone, createdBy } = req.query;
+
         if (!phone || !createdBy) {
-            return res.status(400).json({ message: 'Phone and createdBy are required' });
+            return res.status(200).json([]);
         }
 
+        // Convert phone numbers to strings for comparison
         const customers = await Customer.find({
-            phone: phone,
-            createdBy: createdBy,
+            createdBy,
         })
-            .limit(5)
-            .sort({ createdAt: -1 });
+            .limit(20)
+            .sort({ createdAt: -1 })
+            .then(customers => {
+                // Filter customers whose phone numbers contain the search string
+                return customers.filter(customer => customer.phone.toString().includes(phone));
+            });
 
         res.status(200).json(customers);
     } catch (error) {
-        console.error('Error in getCustomersByNumberController:', error);
-        res.status(500).json({ message: 'Internal server error', error: error.message });
+        console.error('Error searching customers:', error);
+        res.status(500).json({ message: 'Error searching customers' });
     }
 };
 
