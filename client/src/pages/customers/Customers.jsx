@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, SearchOutlined, UserAddOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Modal, Table, message } from 'antd';
 import FormItem from 'antd/lib/form/FormItem';
 import axios from 'axios';
@@ -115,31 +115,40 @@ const Customers = () => {
     };
 
     const handleSearch = async () => {
-        if (!searchPhone) {
-            message.warning('Please enter a phone number to search');
-            return;
-        }
+        const cleanPhone = searchPhone.replace(/\D/g, '');
 
         try {
-            dispatch({
-                type: 'SHOW_LOADING',
-            });
-            const { data } = await axios.get(`/api/customers/get-customers-by-number?phone=${searchPhone}&createdBy=${userId}`);
-            setSearchResults(data);
-            dispatch({
-                type: 'HIDE_LOADING',
+            dispatch({ type: 'SHOW_LOADING' });
+            const response = await axios.get('/api/customers/get-customers-by-number', {
+                params: {
+                    phone: cleanPhone,
+                    createdBy: userId,
+                },
             });
 
-            if (data.length === 0) {
-                message.info('No customer found with this number. Would you like to create a new customer?');
-            }
+            setSearchResults(response.data);
+
+            dispatch({ type: 'HIDE_LOADING' });
         } catch (error) {
-            dispatch({
-                type: 'HIDE_LOADING',
-            });
-            message.error('Error searching for customer');
-            console.log(error);
+            console.error('Search error:', error);
+            message.error('Error searching customers');
+            dispatch({ type: 'HIDE_LOADING' });
         }
+    };
+
+    // Debounce search with shorter delay for better responsiveness
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            handleSearch();
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchPhone]);
+
+    // Handle phone input with partial search support
+    const handlePhoneInput = e => {
+        const value = e.target.value.replace(/\D/g, '');
+        setSearchPhone(value);
     };
 
     const columns = [
@@ -150,6 +159,7 @@ const Customers = () => {
         {
             title: 'Contact Number',
             dataIndex: 'phone',
+            render: phone => <span>+880 {phone}</span>,
         },
         {
             title: 'Customer Address',
@@ -174,17 +184,19 @@ const Customers = () => {
     return (
         <Layout>
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2>All Customers </h2>
+                <h2>All Customers</h2>
                 <div className="d-flex gap-3">
-                    <div className="d-flex gap-2">
-                        <Input placeholder="Search by phone number" value={searchPhone} onChange={e => setSearchPhone(e.target.value)} style={{ width: '200px' }} />
-                        <Button icon={<SearchOutlined />} onClick={handleSearch}>
-                            Search
-                        </Button>
-                    </div>
+                    <Input
+                        placeholder="Search by phone number"
+                        value={searchPhone}
+                        onChange={handlePhoneInput}
+                        style={{ width: '200px' }}
+                        prefix="+880"
+                        suffix={<SearchOutlined />}
+                        maxLength={15}
+                    />
                     <Button
                         className="add-new"
-                        icon={<UserAddOutlined />}
                         onClick={() => {
                             setEditCustomer(null);
                             form.resetFields();
@@ -196,18 +208,16 @@ const Customers = () => {
                 </div>
             </div>
 
-            {/* Search Results */}
-            {searchResults.length > 0 && (
-                <div className="mb-4">
-                    <h3>Search Results</h3>
-                    <Table dataSource={searchResults} columns={columns} bordered pagination={false} className="mb-4" />
-                </div>
-            )}
+            <Table
+                dataSource={searchPhone ? searchResults : customersData}
+                columns={columns}
+                bordered
+                pagination={false}
+                locale={{
+                    emptyText: searchPhone ? 'No matching customers found' : 'No customers available',
+                }}
+            />
 
-            {/* All Customers Table */}
-            <Table dataSource={customersData} columns={columns} bordered />
-
-            {/* add/edit customer modal */}
             <Modal
                 title={editCustomer ? 'Edit Customer' : 'Add New Customer'}
                 visible={popModal}
@@ -220,18 +230,32 @@ const Customers = () => {
             >
                 <Form layout="vertical" onFinish={handlerSubmit} form={form} initialValues={editCustomer}>
                     <FormItem name="name" label="Customer Name" rules={[{ required: true, message: 'Please enter customer name' }]}>
-                        <Input placeholder="Enter customer name" />
+                        <Input />
                     </FormItem>
-                    <FormItem name="phone" label="Phone Number" rules={[{ required: true, message: 'Please enter phone number' }]}>
-                        <Input placeholder="Enter phone number" />
+                    <FormItem
+                        name="phone"
+                        label="Contact Number"
+                        rules={[
+                            { required: true, message: 'Please enter contact number' },
+                            { pattern: /^\d+$/, message: 'Please enter only numbers' },
+                        ]}
+                    >
+                        <Input
+                            prefix="+880"
+                            maxLength={15}
+                            onChange={e => {
+                                const value = e.target.value.replace(/\D/g, '');
+                                form.setFieldsValue({ phone: value });
+                            }}
+                        />
                     </FormItem>
-                    <FormItem name="address" label="Address" rules={[{ required: true, message: 'Please enter address' }]}>
-                        <Input placeholder="Enter address" />
+                    <FormItem name="address" label="Customer Address" rules={[{ required: true, message: 'Please enter customer address' }]}>
+                        <Input />
                     </FormItem>
 
                     <div className="form-btn-add">
                         <Button htmlType="submit" className="add-new">
-                            {editCustomer ? 'Update Customer' : 'Add Customer'}
+                            {editCustomer ? 'Update' : 'Add'}
                         </Button>
                     </div>
                 </Form>

@@ -207,8 +207,9 @@ const Cart = () => {
                             {/* find customer by number or create new customer */}
                             <FormItem name="phone" label="Customer Phone" rules={[{ required: true, message: 'Please enter phone number' }]}>
                                 <Input
+                                    prefix="+880"
                                     onBlur={async e => {
-                                        const phone = e.target.value;
+                                        const phone = e.target.value.replace(/\D/g, '');
                                         if (phone && userId) {
                                             try {
                                                 const response = await axios.get(`/api/customers/get-customers-by-number?phone=${phone}&createdBy=${userId}`);
@@ -230,6 +231,12 @@ const Cart = () => {
                                             }
                                         }
                                     }}
+                                    onChange={e => {
+                                        // Remove non-numeric characters and any prefix
+                                        const value = e.target.value.replace(/\D/g, '');
+                                        form.setFieldsValue({ phone: value });
+                                    }}
+                                    maxLength={15}
                                 />
                             </FormItem>
                             <FormItem name="name" label="Customer Name" rules={[{ required: true, message: 'Please enter customer name' }]}>

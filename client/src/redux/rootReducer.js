@@ -16,6 +16,13 @@ export const rootReducer = (state = initialState, action) => {
                 loading: false,
             };
         case 'ADD_TO_CART':
+            const existingItem = state.cartItems.find(item => item._id === action.payload._id);
+            if (existingItem) {
+                return {
+                    ...state,
+                    cartItems: state.cartItems.map(item => (item._id === action.payload._id ? { ...item, quantity: item.quantity + 1 } : item)),
+                };
+            }
             return {
                 ...state,
                 cartItems: [...state.cartItems, action.payload],
