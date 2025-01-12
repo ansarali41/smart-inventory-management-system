@@ -79,27 +79,49 @@ const Products = () => {
         {
             title: 'Price',
             dataIndex: 'price',
-            render: (price, record) => <span>{price}৳</span>,
+            render: price => <span>{price}৳</span>,
         },
         {
             title: 'Stock',
             dataIndex: 'stock',
-            render: (stock, record) => (
-                <div>{record.stock < 10 ? <span style={{ color: 'red' }}>{record.stock}</span> : <span style={{ color: 'green' }}>{record.stock}</span>}</div>
+            render: stock => (
+                <div>
+                    {stock < 10 ? (
+                        <span style={{ color: 'red' }}>{stock}</span>
+                    ) : (
+                        <span style={{ color: 'green' }}>{stock}</span>
+                    )}
+                </div>
             ),
         },
         {
             title: 'Actions',
             dataIndex: '_id',
-            render: (id, record) => (
+            render: (_, record) => (
                 <div>
-                    <DeleteOutlined className="cart-action" onClick={() => handlerDelete(record)} />
+                    <Button
+                        type="primary"
+                        onClick={() => {
+                            dispatch({
+                                type: 'ADD_TO_CART',
+                                payload: { ...record, quantity: 1 },
+                            });
+                            message.success('Added to cart');
+                        }}
+                        style={{ marginRight: '10px' }}
+                    >
+                        Add to Cart
+                    </Button>
                     <EditOutlined
                         className="cart-edit"
                         onClick={() => {
                             setEditProduct(record);
                             setPopModal(true);
                         }}
+                    />
+                    <DeleteOutlined
+                        className="cart-action"
+                        onClick={() => handlerDelete(record)}
                     />
                 </div>
             ),
