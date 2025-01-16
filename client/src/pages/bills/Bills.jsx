@@ -32,7 +32,7 @@ const Bills = () => {
                 type: 'SHOW_LOADING',
             });
             const { data } = await axios.get('/api/bills/getbills', {
-                params: { createdBy: userId }
+                params: { createdBy: userId },
             });
             setBillsData(data);
             dispatch({
@@ -110,12 +110,12 @@ const Bills = () => {
                 <Modal title="Invoice Details" width={400} pagination={false} visible={popModal} onCancel={() => setPopModal(false)} footer={false}>
                     <div className="card" ref={componentRef}>
                         <div className="cardHeader">
-                            <h2 className="logo">MP POS</h2>
+                            <h3 className="logo">Invoice number: {selectedBill._id}</h3>
                             <span>
-                                Number: <b>+381/0000000</b>
+                                Number: <b>+8801712345678</b>
                             </span>
                             <span>
-                                Address: <b>34000 Kragujevac, Serbia</b>
+                                Address: <b>Dhaka, Bangladesh</b>
                             </span>
                         </div>
                         <div className="cardBody">
